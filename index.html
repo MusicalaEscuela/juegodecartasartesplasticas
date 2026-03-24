@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Musicala — Artes Plásticas: El Juego de Cartas</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── Variables ─────────────────────────────────────── */
+:root {
+  --cream:       #f2e6d4;
+  --parchment:   #e6d5b8;
+  --dark:        #1a0f06;
+  --brown:       #5a3a18;
+  --terracotta:  #c0522a;
+  --slate:       #3d6373;
+  --olive:       #4e6830;
+  --gold:        #b88a18;
+  --purple:      #6e3e6a;
+  --ink:         #2a1a0a;
+  --shadow:      rgba(26,15,6,0.18);
+  --glass:       rgba(255,255,255,0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--cream);
+  font-family: 'Crimson Pro', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Grain + gradient overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse at 15% 85%, rgba(192,82,42,.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(61,99,115,.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(184,138,24,.04) 0%, transparent 70%);
+}
+
+/* ── Screen system ──────────────────────────────────── */
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: flex; }
+
+/* ════════════════════════════════════════════════════
+   START SCREEN
+   ════════════════════════════════════════════════════ */
+#start-screen {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  gap: 1.5rem;
+}
+
+.logo-eyebrow {
+  font-family: 'Caveat', cursive;
+  font-size: 1rem;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--brown);
+  opacity: .7;
+}
+.logo-title {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(2.8rem, 8vw, 5rem);
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1;
+}
+.logo-title span { color: var(--terracotta); }
+.logo-subtitle {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--brown);
+}
+
+.preview-cards {
+  display: flex;
+  gap: .8rem;
+  transform: rotate(-1.5deg);
+  filter: drop-shadow(3px 6px 12px var(--shadow));
+}
+.preview-card {
+  width: 72px; height: 100px;
+  background: white;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  transform: rotate(var(--r, 0deg));
+  box-shadow: 2px 3px 8px var(--shadow);
+}
+
+.rules-box {
+  background: var(--glass);
+  border: 1.5px solid rgba(90,58,24,.15);
+  border-radius: 14px;
+  padding: .9rem 1.4rem;
+  max-width: 320px;
+  text-align: left;
+}
+.rules-box h3 {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  color: var(--brown);
+  margin-bottom: .4rem;
+}
+.rules-box ul {
+  list-style: none;
+  font-size: .9rem;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+.rules-box li::before { content: '→ '; color: var(--terracotta); }
+
+.btn-start {
+  background: var(--dark);
+  color: var(--cream);
+  border: none;
+  padding: .9rem 2.8rem;
+  font-family: 'Caveat', cursive;
+  font-size: 1.6rem;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--brown);
+  transition: transform .15s, box-shadow .15s;
+}
+.btn-start:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--brown); }
+.btn-start:active { transform: translateY(1px);  box-shadow: 0 2px 0 var(--brown); }
+
+/* ════════════════════════════════════════════════════
+   GAME SCREEN
+   ════════════════════════════════════════════════════ */
+#game-screen {
+  flex-direction: column;
+  height: 100vh;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: .6rem;
+  gap: .5rem;
+  overflow: hidden;
+}
+
+/* Zone strips */
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.zone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .15rem .5rem;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.zone-name {
+  font-family: 'Caveat', cursive;
+  font-size: .85rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--brown);
+}
+
+/* Obra progress */
+.obra-wrap { display: flex; align-items: center; gap: .35rem; }
+.obra-lbl  { font-family: 'Caveat', cursive; font-size: .78rem; color: var(--brown); }
+.obra-frag {
+  width: 18px; height: 22px;
+  border: 2px solid var(--brown);
+  border-radius: 3px;
+  background: transparent;
+  transition: background .4s, border-color .4s;
+  position: relative; overflow: hidden;
+}
+.obra-frag.filled {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+}
+.obra-frag.filled::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.35) 0%, transparent 60%);
+}
+
+/* Hand strip */
+.hand-strip {
+  display: flex;
+  gap: .45rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: .2rem .5rem .4rem;
+  min-height: 88px;
+  align-items: flex-end;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90,58,24,.2) transparent;
+}
+.hand-strip::-webkit-scrollbar { height: 3px; }
+.hand-strip::-webkit-scrollbar-thumb { background: rgba(90,58,24,.2); border-radius: 2px; }
+
+/* AI hand shows backs */
+.card-back {
+  flex-shrink: 0;
+  width: 56px; height: 78px;
+  background: var(--dark);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  opacity: .75;
+}
+
+/* ── Battlefield ───────────────────────── */
+#battlefield {
+  display: grid;
+  grid-template-columns: 130px 1fr 130px;
+  gap: .6rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.active-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+}
+.slot-lbl {
+  font-family: 'Caveat', cursive;
+  font-size: .72rem;
+  color: var(--brown);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  opacity: .75;
+}
+
+/* Log panel */
+#log-panel {
+  background: var(--glass);
+  border: 1.5px solid rgba(90,58,24,.18);
+  border-radius: 14px;
+  padding: .6rem .7rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#battle-log {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90,58,24,.2) transparent;
+}
+#battle-log::-webkit-scrollbar { width: 3px; }
+#battle-log::-webkit-scrollbar-thumb { background: rgba(90,58,24,.2); border-radius: 2px; }
+
+.log-entry {
+  font-size: .82rem;
+  line-height: 1.35;
+  padding: .18rem .35rem;
+  border-radius: 5px;
+  animation: fadeIn .3s ease;
+}
+.log-entry.sys    { color: var(--brown); font-style: italic; font-size: .78rem; }
+.log-entry.p      { background: rgba(61,99,115,.1); color: var(--ink); }
+.log-entry.ai     { background: rgba(192,82,42,.1); color: var(--ink); }
+.log-entry.big    { font-weight: 600; background: rgba(184,138,24,.15); color: var(--dark); }
+
+#controls {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  margin-top: .5rem;
+  flex-wrap: wrap;
+}
+.turn-ind {
+  flex: 1;
+  font-family: 'Caveat', cursive;
+  font-size: .95rem;
+  color: var(--brown);
+  text-align: center;
+}
+
+/* Buttons */
+.btn {
+  border: none;
+  padding: .42rem .9rem;
+  font-family: 'Caveat', cursive;
+  font-size: 1.05rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s, opacity .15s;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+
+.btn-atk {
+  background: var(--terracotta);
+  color: #fff;
+  box-shadow: 0 3px 0 #8a3a1e;
+}
+.btn-atk:hover  { transform: translateY(-1px); }
+.btn-atk:active { transform: translateY(1px); box-shadow: 0 1px 0 #8a3a1e; }
+
+.btn-end {
+  background: var(--slate);
+  color: #fff;
+  box-shadow: 0 3px 0 #234552;
+}
+.btn-end:hover  { transform: translateY(-1px); }
+.btn-end:active { transform: translateY(1px); box-shadow: 0 1px 0 #234552; }
+
+/* Energy pips */
+.energy-row { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.nrg-lbl { font-family: 'Caveat', cursive; font-size: .75rem; color: var(--brown); }
+.pip {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem; font-weight: bold; color: #fff;
+}
+.pip.lapiz   { background: #666; }
+.pip.pincel  { background: #8B4513; }
+.pip.comodin { background: #333; }
+
+/* ════════════════════════════════════════════════════
+   CARDS
+   ════════════════════════════════════════════════════ */
+.card-face {
+  flex-shrink: 0;
+  width: 90px; height: 126px;
+  background: white;
+  border-radius: 9px;
+  box-shadow: 2px 3px 7px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .18s, box-shadow .18s;
+  position: relative;
+}
+.card-face:hover:not(.no-interact) {
+  transform: translateY(-9px) scale(1.06);
+  box-shadow: 4px 9px 22px var(--shadow);
+  z-index: 20;
+}
+
+/* Active card (on field) */
+.card-active-sz {
+  width: 118px !important;
+  height: 165px !important;
+  cursor: default;
+}
+.card-active-sz:hover { transform: none !important; box-shadow: 2px 3px 7px var(--shadow) !important; }
+
+/* Type color stripes */
+.stripe { height: 4px; }
+.t-linear   .stripe { background: var(--slate); }
+.t-color    .stripe { background: var(--terracotta); }
+.t-material .stripe { background: var(--olive); }
+.t-maestro  .stripe { background: var(--purple); }
+.t-movimiento .stripe { background: var(--gold); }
+
+/* Type badge */
+.type-badge {
+  position: absolute;
+  top: .3rem; right: .3rem;
+  font-size: .5rem;
+  font-family: 'Caveat', cursive;
+  padding: 1px 4px;
+  border-radius: 10px;
+  color: white;
+  text-transform: uppercase;
+}
+.t-linear   .type-badge { background: var(--slate); }
+.t-color    .type-badge { background: var(--terracotta); }
+.t-material .type-badge { background: var(--olive); }
+.t-maestro  .type-badge { background: var(--purple); }
+.t-movimiento .type-badge { background: var(--gold); }
+
+.card-head {
+  padding: .32rem .45rem .1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.card-nm {
+  font-family: 'Caveat', cursive;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1.1;
+  max-width: 58px;
+}
+.card-hp {
+  font-family: 'Caveat', cursive;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--terracotta);
+  white-space: nowrap;
+}
+
+.card-art {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.9rem;
+}
+.card-active-sz .card-art { font-size: 2.6rem; }
+
+/* HP bar */
+.hpbar-wrap { padding: 0 .4rem .25rem; background: #f8f8f8; }
+.hpbar-track { height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; }
+.hpbar-fill { height: 100%; border-radius: 2px; transition: width .5s ease; }
+.hpbar-fill.hi  { background: #4caf50; }
+.hpbar-fill.mid { background: #ff9800; }
+.hpbar-fill.low { background: #f44336; }
+
+.card-body { padding: .25rem .4rem; background: #fafafa; }
+.card-atk-name { font-family: 'Caveat', cursive; font-size: .72rem; font-weight: 600; color: var(--dark); }
+.card-atk-cost { font-size: .6rem; color: var(--brown); opacity: .7; }
+.card-atk-dmg  { font-family: 'Caveat', cursive; font-size: .9rem; font-weight: 700; color: var(--terracotta); }
+.card-desc { font-size: .65rem; font-style: italic; color: var(--brown); line-height: 1.3; }
+
+/* Animations */
+@keyframes fadeIn  { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform: translateY(0); } }
+@keyframes shake   {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(10px); }
+  40%  { transform: translateX(-8px); }
+  60%  { transform: translateX(5px); }
+  80%  { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+@keyframes flash   {
+  0%   { filter: brightness(1); }
+  40%  { filter: brightness(2.2) saturate(.1); }
+  100% { filter: brightness(1); }
+}
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.anim-shake  { animation: shake .4s ease; }
+.anim-flash  { animation: flash .45s ease; }
+.anim-enter  { animation: slideUp .3s ease; }
+
+/* ════════════════════════════════════════════════════
+   GAME OVER SCREEN
+   ════════════════════════════════════════════════════ */
+#gameover-screen {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  gap: 1rem;
+}
+.go-result {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1;
+  animation: pop .5s ease;
+}
+.go-result.win  { color: var(--olive); }
+.go-result.lose { color: var(--terracotta); }
+.go-msg {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--brown);
+  max-width: 320px;
+}
+.go-stats {
+  background: var(--glass);
+  border: 1.5px solid rgba(90,58,24,.15);
+  border-radius: 12px;
+  padding: .8rem 1.4rem;
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  color: var(--dark);
+  display: flex;
+  gap: 2rem;
+}
+.go-stats span { color: var(--terracotta); font-size: 1.4rem; }
+
+/* ── Responsive ─────────────────────────── */
+@media (max-width: 580px) {
+  #battlefield { grid-template-columns: 100px 1fr 100px; }
+  .card-face { width: 78px; height: 110px; }
+  .card-active-sz { width: 100px !important; height: 140px !important; }
+  .card-art { font-size: 1.6rem; }
+  .card-active-sz .card-art { font-size: 2.1rem; }
+}
+@media (max-width: 420px) {
+  #battlefield { grid-template-columns: 90px 1fr 90px; }
+  .card-face { width: 70px; height: 98px; }
+  .card-active-sz { width: 88px !important; height: 123px !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ START SCREEN ══════════════════════════════ -->
+<div id="start-screen" class="screen active">
+  <div>
+    <div class="logo-eyebrow">Musicala presenta</div>
+    <div class="logo-title">Artes <span>⬡</span></div>
+    <div class="logo-subtitle">El juego de cartas de las artes plásticas</div>
+  </div>
+
+  <div class="preview-cards">
+    <div class="preview-card" style="--r:-6deg">✏️</div>
+    <div class="preview-card" style="--r:2deg">🎨</div>
+    <div class="preview-card" style="--r:-3deg">🌺</div>
+    <div class="preview-card" style="--r:5deg">📐</div>
+    <div class="preview-card" style="--r:-2deg">🌅</div>
+  </div>
+
+  <div class="rules-box">
+    <h3>¿Cómo se juega?</h3>
+    <ul>
+      <li>Jugá cartas de <strong>material</strong> para ganar energía</li>
+      <li>Atacá con tu <strong>técnica</strong> activa gastando energía</li>
+      <li>Derrotá las técnicas enemigas para ganar <strong>fragmentos de obra</strong></li>
+      <li>¡El primero en completar su obra con <strong>4 fragmentos</strong> gana!</li>
+    </ul>
+  </div>
+
+  <button class="btn-start" onclick="startGame()">¡Empezar Batalla! 🎨</button>
+</div>
+
+<!-- ══ GAME SCREEN ═══════════════════════════════ -->
+<div id="game-screen" class="screen">
+
+  <!-- AI ZONE (top) -->
+  <div class="zone" id="ai-zone">
+    <div class="zone-header">
+      <span class="zone-name">🤖 Taller Rival</span>
+      <div class="obra-wrap" id="ai-obra"><span class="obra-lbl">Obra:</span></div>
+    </div>
+    <div class="hand-strip" id="ai-hand"></div>
+  </div>
+
+  <!-- BATTLEFIELD (middle) -->
+  <div id="battlefield">
+
+    <!-- AI active técnica -->
+    <div class="active-slot">
+      <div class="slot-lbl">Técnica IA</div>
+      <div id="ai-active"></div>
+    </div>
+
+    <!-- Log + controls -->
+    <div id="log-panel">
+      <div id="battle-log"></div>
+      <div id="controls">
+        <button class="btn btn-atk" id="btn-atk" onclick="playerAttack()" disabled>⚔️ Atacar</button>
+        <span class="turn-ind" id="turn-ind">Tu turno</span>
+        <button class="btn btn-end" id="btn-end" onclick="endTurn()" disabled>Pasar →</button>
+      </div>
+    </div>
+
+    <!-- Player active técnica -->
+    <div class="active-slot">
+      <div class="slot-lbl">Tu Técnica</div>
+      <div id="player-active"></div>
+    </div>
+
+  </div>
+
+  <!-- PLAYER ZONE (bottom) -->
+  <div class="zone" id="player-zone">
+    <div class="zone-header">
+      <div class="obra-wrap" id="player-obra"><span class="obra-lbl">Tu Obra:</span></div>
+      <div class="energy-row">
+        <span class="nrg-lbl">⚡</span>
+        <div id="player-energy"></div>
+      </div>
+      <span class="zone-name">Taller Musicala 🎨</span>
+    </div>
+    <div class="hand-strip" id="player-hand"></div>
+  </div>
+
+</div>
+
+<!-- ══ GAME OVER SCREEN ═══════════════════════════ -->
+<div id="gameover-screen" class="screen">
+  <div class="go-result" id="go-result">¡Victoria!</div>
+  <div class="go-msg"    id="go-msg"></div>
+  <div class="go-stats">
+    <div>Tú: <span id="go-p-obra">0</span> fragmentos</div>
+    <div>IA: <span id="go-ai-obra">0</span> fragmentos</div>
+  </div>
+  <button class="btn-start" onclick="restartGame()">Jugar de nuevo →</button>
+</div>
+
+<!-- ══ SCRIPTS ════════════════════════════════════ -->
+<script>
+/* ── Card definitions ───────────────────────────── */
+const DEFS = {
+  garabato: {
+    id:'garabato', name:'Garabato', type:'tecnica', sub:'linear',
+    maxHp:60, atk:{ name:'Línea Libre',    dmg:20, cost:{lapiz:1} },
+    emoji:'✏️', desc:'Libre, espontáneo, sin miedo al error.'
+  },
+  mancha: {
+    id:'mancha',   name:'Mancha',   type:'tecnica', sub:'color',
+    maxHp:70, atk:{ name:'Salpicadura',    dmg:30, cost:{pincel:1} },
+    emoji:'🎨', desc:'El color que escapa del control.'
+  },
+  boceto: {
+    id:'boceto',   name:'Boceto',   type:'tecnica', sub:'linear',
+    maxHp:90, atk:{ name:'Contorno Preciso', dmg:40, cost:{lapiz:2} },
+    emoji:'📐', desc:'La idea toma forma. Cada línea con intención.'
+  },
+  acuarela: {
+    id:'acuarela', name:'Acuarela', type:'tecnica', sub:'color',
+    maxHp:100,atk:{ name:'Flujo Cromático', dmg:50, cost:{pincel:2} },
+    emoji:'💧', desc:'El agua y el pigmento danzan.'
+  },
+  lapiz_m: {
+    id:'lapiz_m',  name:'Lápiz 6B',  type:'material',
+    energy:{lapiz:1},  emoji:'✏️', desc:'Suave, oscuro, expresivo.'
+  },
+  pincel_m: {
+    id:'pincel_m', name:'Pincel Redondo', type:'material',
+    energy:{pincel:1}, emoji:'🖌️', desc:'Presiona, curva y suelta.'
+  },
+  carbon_m: {
+    id:'carbon_m', name:'Carboncillo', type:'material',
+    energy:{comodin:1},emoji:'🖤', desc:'Versátil. Línea o mancha, tú decides.'
+  },
+  frida: {
+    id:'frida',    name:'Frida Kahlo', type:'maestro',
+    effect:'heal30', emoji:'🌺', desc:'Cura 30 HP a tu técnica activa.'
+  },
+  kandinsky: {
+    id:'kandinsky',name:'Kandinsky',   type:'maestro',
+    effect:'boost20',emoji:'🔵', desc:'Tu próximo ataque hace +20 daño.'
+  },
+  impresionismo: {
+    id:'impresionismo', name:'Impresionismo', type:'movimiento',
+    effect:'draw2', emoji:'🌅', desc:'Roba 2 cartas. La luz cambia todo.'
+  }
+};
+
+const DECK_BASE = [
+  'garabato','mancha','boceto','acuarela',   // 4 técnicas
+  'lapiz_m','lapiz_m','pincel_m','pincel_m', // 4 materiales (2 de cada)
+  'frida','kandinsky',                        // 2 maestros
+  'impresionismo','carbon_m'                  // 1 movimiento + 1 comodín
+];
+
+/* ── State ──────────────────────────────────────── */
+let G = {};
+
+function mkPlayer() {
+  return {
+    hand: [], deck: [],
+    active: null,   // { id, hp }
+    bench:  [],     // [{ id, hp }]
+    energy: { lapiz:0, pincel:0, comodin:0 },
+    obra:   0,
+    boost:  0,
+    attacked: false
+  };
+}
+
+function initGame() {
+  G = {
+    P: mkPlayer(),
+    AI: mkPlayer(),
+    turn: 'P',
+    over: false,
+    winner: null,
+    aiLock: false
+  };
+
+  G.P.deck  = shuffle([...DECK_BASE]);
+  G.AI.deck = shuffle([...DECK_BASE]);
+
+  for (let i = 0; i < 5; i++) { drawCard(G.P); drawCard(G.AI); }
+
+  autoPlaceTecnica(G.P);
+  autoPlaceTecnica(G.AI);
+}
+
+function autoPlaceTecnica(pl) {
+  const idx = pl.hand.findIndex(c => DEFS[c].type === 'tecnica');
+  if (idx !== -1) {
+    const id = pl.hand.splice(idx, 1)[0];
+    pl.active = { id, hp: DEFS[id].maxHp };
+  }
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function drawCard(pl) {
+  if (!pl.deck.length || pl.hand.length >= 7) return false;
+  pl.hand.push(pl.deck.shift());
+  return true;
+}
+
+/* ── Log ────────────────────────────────────────── */
+function log(msg, cls = 'sys') {
+  const el = document.createElement('div');
+  el.className = `log-entry ${cls}`;
+  el.textContent = msg;
+  const lb = document.getElementById('battle-log');
+  lb.appendChild(el);
+  lb.scrollTop = lb.scrollHeight;
+}
+
+/* ── Energy helpers ─────────────────────────────── */
+function canAttack(pl) {
+  if (!pl.active) return false;
+  const cost = DEFS[pl.active.id].atk.cost;
+  let wild = pl.energy.comodin;
+  for (const [t, n] of Object.entries(cost)) {
+    const deficit = Math.max(0, n - (pl.energy[t] || 0));
+    wild -= deficit;
+    if (wild < 0) return false;
+  }
+  return true;
+}
+
+function spendEnergy(pl) {
+  const cost = DEFS[pl.active.id].atk.cost;
+  for (const [t, n] of Object.entries(cost)) {
+    let rem = n;
+    const have = pl.energy[t] || 0;
+    const spend = Math.min(have, rem);
+    pl.energy[t] -= spend;
+    rem -= spend;
+    if (rem > 0) pl.energy.comodin -= rem;
+  }
+}
+
+/* ── Player actions ─────────────────────────────── */
+function playCard(idx) {
+  if (G.turn !== 'P' || G.over || G.aiLock) return;
+  const id  = G.P.hand[idx];
+  const def = DEFS[id];
+
+  if (def.type === 'tecnica') {
+    if (!G.P.active) {
+      G.P.hand.splice(idx, 1);
+      G.P.active = { id, hp: def.maxHp };
+      log(`¡"${def.name}" entra al campo!`, 'p');
+    } else if (G.P.bench.length < 2) {
+      G.P.hand.splice(idx, 1);
+      G.P.bench.push({ id, hp: def.maxHp });
+      log(`"${def.name}" va a la banca.`, 'p');
+    } else {
+      log('La banca está llena. No puedes jugar otra técnica.', 'sys'); return;
+    }
+  }
+  else if (def.type === 'material') {
+    G.P.hand.splice(idx, 1);
+    for (const [t, n] of Object.entries(def.energy)) {
+      G.P.energy[t] = (G.P.energy[t] || 0) + n;
+    }
+    const [t, n] = Object.entries(def.energy)[0];
+    log(`Jugaste "${def.name}". +${n} ${t}.`, 'p');
+  }
+  else if (def.type === 'maestro') {
+    if (def.effect === 'heal30') {
+      if (!G.P.active) { log('Necesitas una técnica activa.','sys'); return; }
+      G.P.hand.splice(idx, 1);
+      const maxHp = DEFS[G.P.active.id].maxHp;
+      G.P.active.hp = Math.min(maxHp, G.P.active.hp + 30);
+      log(`¡${def.name} cura 30 HP!`, 'p');
+    } else if (def.effect === 'boost20') {
+      G.P.hand.splice(idx, 1);
+      G.P.boost += 20;
+      log(`¡${def.name}! Próximo ataque +20 daño.`, 'p');
+    }
+  }
+  else if (def.type === 'movimiento') {
+    if (def.effect === 'draw2') {
+      G.P.hand.splice(idx, 1);
+      let n = 0;
+      for (let i = 0; i < 2; i++) if (drawCard(G.P)) n++;
+      log(`¡Impresionismo! Robaste ${n} carta${n!==1?'s':''}.`, 'p');
+    }
+  }
+
+  render(); updateBtns();
+}
+
+function playerAttack() {
+  if (G.turn !== 'P' || G.over || G.aiLock) return;
+  if (!G.P.active || !G.AI.active) return;
+  if (!canAttack(G.P)) { log('Sin energía suficiente para atacar.','sys'); return; }
+  if (G.P.attacked)     { log('Ya atacaste este turno.','sys'); return; }
+
+  spendEnergy(G.P);
+  G.P.attacked = true;
+
+  const def = DEFS[G.P.active.id];
+  const dmg = def.atk.dmg + G.P.boost;
+  G.P.boost = 0;
+
+  log(`⚔️ "${def.atk.name}" → ${dmg} daño a "${DEFS[G.AI.active.id].name}"!`, 'p');
+  G.AI.active.hp = Math.max(0, G.AI.active.hp - dmg);
+
+  animateAtk('player-active', 'ai-active');
+
+  if (G.AI.active.hp <= 0) ko(G.AI, G.P, 'ai');
+
+  render(); updateBtns(); checkWin();
+}
+
+function endTurn() {
+  if (G.turn !== 'P' || G.over) return;
+  G.P.attacked = false;
+  G.turn = 'AI';
+  updateBtns();
+  log('── Turno del rival ──', 'sys');
+  render();
+  setTimeout(aiTurn, 700);
+}
+
+/* ── KO handler ─────────────────────────────────── */
+function ko(defeated, attacker, who) {
+  const name = DEFS[defeated.active.id].name;
+  log(`💀 "${name}" fue derrotada. ¡Fragmento de obra obtenido!`, 'big');
+  attacker.obra++;
+
+  // Find replacement
+  if (defeated.bench.length > 0) {
+    defeated.active = defeated.bench.shift();
+  } else {
+    const idx = defeated.hand.findIndex(c => DEFS[c].type === 'tecnica');
+    if (idx !== -1) {
+      const id = defeated.hand.splice(idx, 1)[0];
+      defeated.active = { id, hp: DEFS[id].maxHp };
+    } else {
+      defeated.active = null;
+    }
+  }
+
+  if (defeated.active) {
+    log(`${who==='ai'?'La IA envía':'Tú enviás'} "${DEFS[defeated.active.id].name}" al campo.`, 'sys');
+  } else {
+    log(`${who==='ai'?'La IA':'Tú'} no tiene más técnicas.`, 'big');
+  }
+}
+
+/* ── AI LOGIC ───────────────────────────────────── */
+async function aiTurn() {
+  if (G.over) return;
+  G.aiLock = true;
+
+  // Draw
+  drawCard(G.AI);
+  await wait(400);
+
+  // Play all materials
+  let changed = true;
+  while (changed) {
+    changed = false;
+    const idx = G.AI.hand.findIndex(c => DEFS[c].type === 'material');
+    if (idx !== -1) {
+      const id  = G.AI.hand.splice(idx, 1)[0];
+      const def = DEFS[id];
+      for (const [t, n] of Object.entries(def.energy)) {
+        G.AI.energy[t] = (G.AI.energy[t] || 0) + n;
+      }
+      log(`IA jugó "${def.name}".`, 'ai');
+      render(); await wait(450); changed = true;
+    }
+  }
+
+  // Place técnica if none active
+  if (!G.AI.active) {
+    const idx = G.AI.hand.findIndex(c => DEFS[c].type === 'tecnica');
+    if (idx !== -1) {
+      const id = G.AI.hand.splice(idx, 1)[0];
+      G.AI.active = { id, hp: DEFS[id].maxHp };
+      log(`IA envía "${DEFS[id].name}" al campo.`, 'ai');
+      render(); await wait(450);
+    }
+  }
+
+  // Heal if wounded
+  const frIdx = G.AI.hand.indexOf('frida');
+  if (frIdx !== -1 && G.AI.active) {
+    const maxHp = DEFS[G.AI.active.id].maxHp;
+    if (G.AI.active.hp < maxHp * 0.5) {
+      G.AI.hand.splice(frIdx, 1);
+      G.AI.active.hp = Math.min(maxHp, G.AI.active.hp + 30);
+      log('IA jugó "Frida Kahlo". +30 HP.', 'ai');
+      render(); await wait(450);
+    }
+  }
+
+  // Boost if can attack
+  const kandIdx = G.AI.hand.indexOf('kandinsky');
+  if (kandIdx !== -1 && canAttack(G.AI)) {
+    G.AI.hand.splice(kandIdx, 1);
+    G.AI.boost += 20;
+    log('IA jugó "Kandinsky". Próximo ataque +20 daño.', 'ai');
+    render(); await wait(450);
+  }
+
+  // Play impresionismo if hand almost empty
+  const impIdx = G.AI.hand.indexOf('impresionismo');
+  if (impIdx !== -1 && G.AI.hand.length <= 2) {
+    G.AI.hand.splice(impIdx, 1);
+    let n = 0;
+    for (let i = 0; i < 2; i++) if (drawCard(G.AI)) n++;
+    log(`IA jugó "Impresionismo". Robó ${n} carta${n!==1?'s':''}.`, 'ai');
+    render(); await wait(450);
+  }
+
+  // Attack
+  if (G.AI.active && G.P.active && canAttack(G.AI)) {
+    spendEnergy(G.AI);
+    const def = DEFS[G.AI.active.id];
+    const dmg = def.atk.dmg + G.AI.boost;
+    G.AI.boost = 0;
+    log(`⚔️ IA usa "${def.atk.name}" → ${dmg} daño!`, 'ai');
+    G.P.active.hp = Math.max(0, G.P.active.hp - dmg);
+    animateAtk('ai-active', 'player-active');
+    if (G.P.active.hp <= 0) ko(G.P, G.AI, 'player');
+    render(); await wait(600);
+    checkWin();
+  }
+
+  if (!G.over) {
+    G.turn = 'P';
+    G.aiLock = false;
+    log('── Tu turno ──', 'sys');
+    drawCard(G.P);
+    render(); updateBtns();
+  }
+}
+
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ── Win check ──────────────────────────────────── */
+function checkWin() {
+  if (G.over) return;
+
+  if (G.P.obra >= 4)  { endGame('P', '¡Completaste tu obra maestra!'); return; }
+  if (G.AI.obra >= 4) { endGame('AI','La IA completó su obra.'); return; }
+
+  const noAILeft  = !G.AI.active && !G.AI.bench.length && !G.AI.hand.some(c => DEFS[c].type==='tecnica');
+  const noPLeft   = !G.P.active  && !G.P.bench.length  && !G.P.hand.some(c  => DEFS[c].type==='tecnica');
+
+  if (noAILeft) { endGame('P','¡Derrotaste todas las técnicas rivales!'); return; }
+  if (noPLeft)  { endGame('AI','Tus técnicas fueron derrotadas. ¡Sigue practicando!'); return; }
+}
+
+function endGame(winner, msg) {
+  G.over = true; G.winner = winner;
+  log(winner === 'P' ? '🏆 ¡VICTORIA!' : '😔 Derrota...', 'big');
+  updateBtns();
+
+  setTimeout(() => {
+    const isWin = winner === 'P';
+    document.getElementById('go-result').textContent = isWin ? '¡Victoria! 🎨' : 'Derrota 🖌️';
+    document.getElementById('go-result').className   = `go-result ${isWin ? 'win':'lose'}`;
+    document.getElementById('go-msg').textContent    = msg;
+    document.getElementById('go-p-obra').textContent  = G.P.obra;
+    document.getElementById('go-ai-obra').textContent = G.AI.obra;
+    showScreen('gameover-screen');
+  }, 1600);
+}
+
+/* ── Animations ─────────────────────────────────── */
+function animateAtk(atkSlot, tgtSlot) {
+  const atkCard = document.querySelector(`#${atkSlot} .card-face`);
+  const tgtCard = document.querySelector(`#${tgtSlot} .card-face`);
+  if (atkCard) { atkCard.classList.add('anim-shake'); setTimeout(()=>atkCard.classList.remove('anim-shake'),500); }
+  if (tgtCard) { setTimeout(()=>{ tgtCard.classList.add('anim-flash'); setTimeout(()=>tgtCard.classList.remove('anim-flash'),500); },180); }
+}
+
+/* ── Render ─────────────────────────────────────── */
+function makeCardEl(cardId, opts = {}) {
+  const def = DEFS[cardId];
+  const { hp=null, isActive=false, onClick=null } = opts;
+  const typeClass = def.type === 'tecnica' ? `t-${def.sub}` : `t-${def.type}`;
+
+  const el = document.createElement('div');
+  el.className = `card-face ${typeClass}${isActive?' card-active-sz':''} anim-enter`;
+  if (!onClick) el.classList.add('no-interact');
+  if (onClick) el.addEventListener('click', onClick);
+
+  // HP section
+  let hpHtml = '', hpbarHtml = '';
+  if (def.type === 'tecnica' && hp !== null) {
+    const pct = Math.max(0, hp / def.maxHp * 100);
+    const cls = pct > 50 ? 'hi' : pct > 25 ? 'mid' : 'low';
+    hpHtml = `<span class="card-hp">${hp}/${def.maxHp}</span>`;
+    hpbarHtml = `<div class="hpbar-wrap"><div class="hpbar-track"><div class="hpbar-fill ${cls}" style="width:${pct}%"></div></div></div>`;
+  }
+
+  // Body
+  let bodyHtml = '';
+  if (def.type === 'tecnica') {
+    const costStr = Object.entries(def.atk.cost).map(([t,n])=>`${n} ${t}`).join(' + ');
+    bodyHtml = `
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="card-atk-name">${def.atk.name}</span>
+          <span class="card-atk-dmg">${def.atk.dmg}</span>
+        </div>
+        <div class="card-atk-cost">${costStr}</div>
+      </div>`;
+  } else {
+    bodyHtml = `<div class="card-body"><div class="card-desc">${def.desc}</div></div>`;
+  }
+
+  const typeLabel = def.type === 'tecnica' ? def.sub : def.type;
+
+  el.innerHTML = `
+    <div class="stripe"></div>
+    <div class="card-head">
+      <span class="card-nm">${def.name}</span>
+      ${hpHtml}
+    </div>
+    <div class="card-art">${def.emoji}<span class="type-badge">${typeLabel}</span></div>
+    ${hpbarHtml}
+    ${bodyHtml}
+  `;
+
+  return el;
+}
+
+function renderObra(el, count, total = 4) {
+  el.querySelectorAll('.obra-frag').forEach(e => e.remove());
+  for (let i = 0; i < total; i++) {
+    const f = document.createElement('div');
+    f.className = `obra-frag${i < count ? ' filled' : ''}`;
+    el.appendChild(f);
+  }
+}
+
+function renderEnergy(el, energy) {
+  el.innerHTML = '';
+  const types = [
+    { k:'lapiz',   cls:'lapiz',   lbl:'✏' },
+    { k:'pincel',  cls:'pincel',  lbl:'🖌' },
+    { k:'comodin', cls:'comodin', lbl:'★' }
+  ];
+  let total = 0;
+  for (const { k, cls, lbl } of types) {
+    for (let i = 0; i < (energy[k]||0); i++) {
+      const p = document.createElement('div');
+      p.className = `pip ${cls}`;
+      p.textContent = lbl;
+      el.appendChild(p);
+      total++;
+    }
+  }
+  if (!total) el.innerHTML = '<span style="font-size:.72rem;color:var(--brown);opacity:.5;font-style:italic">sin energía</span>';
+}
+
+function render() {
+  // AI hand (backs)
+  const aiHand = document.getElementById('ai-hand');
+  aiHand.innerHTML = '';
+  G.AI.hand.forEach(() => {
+    const b = document.createElement('div');
+    b.className = 'card-back';
+    b.textContent = '🎨';
+    aiHand.appendChild(b);
+  });
+
+  // AI active
+  const aiSlot = document.getElementById('ai-active');
+  aiSlot.innerHTML = '';
+  if (G.AI.active) {
+    aiSlot.appendChild(makeCardEl(G.AI.active.id, { hp: G.AI.active.hp, isActive: true }));
+  }
+
+  // AI obra
+  renderObra(document.getElementById('ai-obra'), G.AI.obra);
+
+  // Player hand (clickable)
+  const pHand = document.getElementById('player-hand');
+  pHand.innerHTML = '';
+  G.P.hand.forEach((id, i) => {
+    pHand.appendChild(makeCardEl(id, {
+      onClick: G.turn === 'P' && !G.over && !G.aiLock ? () => playCard(i) : null
+    }));
+  });
+
+  // Player active
+  const pSlot = document.getElementById('player-active');
+  pSlot.innerHTML = '';
+  if (G.P.active) {
+    pSlot.appendChild(makeCardEl(G.P.active.id, { hp: G.P.active.hp, isActive: true }));
+  }
+
+  // Player energy + obra
+  renderEnergy(document.getElementById('player-energy'), G.P.energy);
+  renderObra(document.getElementById('player-obra'), G.P.obra);
+}
+
+function updateBtns() {
+  const isP = G.turn === 'P' && !G.over && !G.aiLock;
+  document.getElementById('btn-atk').disabled = !(isP && canAttack(G.P) && !G.P.attacked && G.AI.active);
+  document.getElementById('btn-end').disabled = !isP;
+  document.getElementById('turn-ind').textContent = isP ? '⚡ Tu turno' : '⏳ Turno rival…';
+}
+
+/* ── Screen management ──────────────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  initGame();
+  showScreen('game-screen');
+
+  // Clear log
+  document.getElementById('battle-log').innerHTML = '';
+
+  log('¡Que comience la batalla por el arte! 🎨', 'big');
+  log('Jugá cartas de material para ganar energía, luego atacá.', 'sys');
+
+  render();
+  updateBtns();
+}
+
+function restartGame() {
+  showScreen('start-screen');
+}
+</script>
+</body>
+</html>
